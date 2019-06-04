@@ -2,8 +2,21 @@ import React from 'react'
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Image } from 'react-native'
 import { MediaLibrary, Permissions } from 'expo'
 import { Platform } from 'react-native'
+import axios from 'axios'
 
 import db from '../db'
+
+const MakePublicBtn = ({ isPublic, updatePublicStatus }) => {
+  return <TouchableOpacity style={styles.makePublic} onPress={() => updatePublicStatus()}>
+          <Text style={styles.makePublicText}>{isPublic ? 'Unpublish' : 'Make Public'}</Text>
+        </TouchableOpacity>
+}
+
+const SaveRecipeBtn = ({ saveRecipeToLocalDb }) => {
+  return <TouchableOpacity style={styles.makePublic} onPress={() => saveRecipeToLocalDb()}>
+          <Text style={styles.makePublicText}>Save Recipe</Text>
+        </TouchableOpacity>
+}
 
 const Star = ({ filled }) => {
   return filled
@@ -11,16 +24,28 @@ const Star = ({ filled }) => {
     : <Image source={require(`../../assets/icons/star_gray.png`)} style={{ width: 20, height: 20, marginRight: 5 }} />
 }
 
+const Skeleton = () =>
+  <ScrollView style={styles.scrollBox}>
+    <TouchableOpacity style={styles.makePublic}>
+      <Text style={styles.makePublicText}></Text>
+    </TouchableOpacity>
+
+    <View style={styles.imageBox}></View>
+
+    <View style={styles.informationBox}>
+      <Text style={styles.name}>hello</Text>
+      <Text style={styles.text}>nice</Text>
+    </View>
+
+    <TouchableOpacity style={styles.deleteBtn}>
+      <Text style={styles.deleteText}>Delete tasty recipe</Text>
+    </TouchableOpacity>
+
+  </ScrollView>
+
 
 export default class RecipeScreen extends React.Component {
-  // static navigationOptions = ({ navigation }) => {
-  //   return {
-  //     title: navigation.getParam('name', 'unnamed'),
-  //   }
-  // }
-
   static navigationOptions = {
-    title: 'My Recipes',
     header: null,
   }
 
@@ -51,6 +76,10 @@ export default class RecipeScreen extends React.Component {
         })
   }
 
+  saveRecipeToLocalDb = () => {
+    
+  }
+
   uploadRecipe = () => {
     const { _id, name, text, score, image, date } = this.state
     let fileType = image.substring(image.lastIndexOf('.') + 1)
@@ -71,43 +100,42 @@ export default class RecipeScreen extends React.Component {
 
     const options = {
       method: 'POST',
+      mode: 'cors',
       body: formData,
       headers: {
+        'Accept': 'application/json',
         'Content-Type': 'multipart/form-data'
       }
     }
 
     fetch('http://92.35.43.129:4000/upload/recipe', options)
+      .then(res => res.json())
+      .then(res => res)
+      .catch(err => err)
       .then(res => {
-        console.log(res)
-        return res.json()
-      })
-      .then(res => {
-        console.log(res)
-        console.log('upload success', res)
         this.setState({ isPublic: true })
         this.updatePublicStatusLocally(true)
-      })
-      .catch(error => {
-        console.log('RÖVHÅL')
-        console.log(error)
+        console.log('success')
       })
       
   }
 
-  delete = () => {
-    db.remove({ _id: this.state._id })
-    this.props.navigation.push('Home')
-  }
-
-  isEmpty = obj =>  {
+  isEmpty = obj => {
     for(var key in obj) {
         if(obj.hasOwnProperty(key))
             return false
     }
     return true
-}
+  }
 
+  // deletes the current recipe from our local database
+  delete = () => {
+    db.remove({ _id: this.state._id })
+    this.props.navigation.push('Home')
+    // ADD SERVER RECIPE REMOVE
+  }
+
+  //Checks is this recipe is already uploaded to the server or not
   isRecipeOnServer = async() => {
     const { _id } = this.state
     let res = await fetch(`http://92.35.43.129:4000/recipe?_id=${_id}`)
@@ -117,10 +145,11 @@ export default class RecipeScreen extends React.Component {
     return onServer
   }
 
+  // Updates our local recipe publicity status
   updatePublicStatusLocally = isPublic => {
     const { _id } = this.state
-    db.update({ _id }, { isPublic}, {}, (err, numReplaced) => {
-      console.log(numReplaced)
+    db.update({ _id }, { $set: { isPublic } }, {}, (err, numReplaced) => {
+      console.log('updated publicity locally')
     })
   }
 
@@ -147,6 +176,9 @@ export default class RecipeScreen extends React.Component {
   render() {
     const { _id, name, text, score, image, isPublic } = this.state
     const toplist = this.props.navigation.getParam('toplist', false)
+    if (!_id) {
+      return <Skeleton />
+    } 
     return (
       <ScrollView style={styles.scrollBox}>
 
@@ -183,17 +215,23 @@ const styles = StyleSheet.create({
     backgroundColor: '#eee',
     paddingTop: 0,
   },
+  mustard: {
+    backgroundColor: '#F8A927',
+    flex: 1
+  },
   makePublic: {
     position: 'absolute',
     zIndex: 2,
-    top: 40,
-    right: 15,
+    top: 20,
+    right: 20,
     backgroundColor: '#fff',
     paddingTop: 10,
     paddingBottom: 10,
     paddingLeft: 20,
     paddingRight: 20,
     borderRadius: 50,
+    elevation: 10,
+    minWidth: 100
   },
   makePublicText: {
     fontSize: 12,
@@ -206,6 +244,7 @@ const styles = StyleSheet.create({
     marginTop: -50,
     marginLeft: 25,
     marginRight: 25,
+    minHeight: 300
   },
   score: {
     flexDirection: 'row',
@@ -226,7 +265,8 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   imageBox: {
-    backgroundColor: '#eee',
+    backgroundColor: '#F8A927',
+    height: 400,
     overflow: 'hidden'
   },
   text: {

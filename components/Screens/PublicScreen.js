@@ -8,7 +8,6 @@ import Header from '../Header'
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
-    title: 'Your Recipes',
     header: null,
   }
 

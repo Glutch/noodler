@@ -1,13 +1,12 @@
 import React from 'react'
-import { StyleSheet, Text, View, TouchableOpacity, CameraRoll, Dimensions, Platform } from 'react-native'
+import { StyleSheet, Text, View, TouchableOpacity, CameraRoll, Dimensions, Platform, StatusBar } from 'react-native'
 import { Camera, Permissions, FileSystem, MediaLibrary } from 'expo'
 
 const DESIRED_RATIO = '16:9'
 
 export default class CameraScreen extends React.Component {
-
   static navigationOptions = {
-    title: 'Take a picture',
+    header: null,
   }
 
   state = {
@@ -70,6 +69,7 @@ export default class CameraScreen extends React.Component {
     } else {
       return (
         <View style={styles.container}>
+          <StatusBar hidden={true} />
           <Camera
             onCameraReady={this.prepareRatio}
             type={type}

@@ -6,7 +6,7 @@ import db from '../db'
 
 export default class CreateRecipeScreen extends React.Component {
   static navigationOptions = {
-    title: 'New Recipe',
+    header: null,
   }
 
   state = {
@@ -19,7 +19,6 @@ export default class CreateRecipeScreen extends React.Component {
 3. Enjoy!`,
     score: 0,
     image: null,
-    imageFromCamera: false
   }
 
   componentDidMount() {
@@ -33,6 +32,11 @@ export default class CreateRecipeScreen extends React.Component {
     this.updateImage()
   }
 
+  resetImageState = () => {
+    this.props.navigation.setParams({ image: null })
+    this.setState({ image: null })
+  }
+
   updateImage = () => {
     // checks if navigation.param.image is updated, if so - update state
     const image = this.props.navigation.getParam('image', null) // get imageObject from navigation props (if there is one)
@@ -41,9 +45,9 @@ export default class CreateRecipeScreen extends React.Component {
 
   browseImages = async() => {
     const image = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'Images' })
-    const { cancelled } = image
+    const { cancelled, uri } = image
     if (!cancelled) { // checks if the user actually selected an image
-      this.props.navigation.setParams({ image }) // updates navigation param image to new uri
+      this.props.navigation.setParams({ image: uri }) // updates navigation param image to new uri
     }
   }
 
@@ -63,7 +67,7 @@ export default class CreateRecipeScreen extends React.Component {
       name,
       text,
       score,
-      image: image.uri,
+      image: image,
       isPublic: false,
       date: new Date(),
     }
@@ -79,35 +83,35 @@ export default class CreateRecipeScreen extends React.Component {
   render() {
     const { navigation } = this.props
     const { name, score, text, image } = this.state
-    console.log('image', image)
+    console.log(image)
     return (
       <KeyboardAvoidingView style={styles.container} keyboardVerticalOffset={65} behavior='padding' enabled>
         <ScrollView style={styles.scrollBox}>
-          <TouchableOpacity onPress={() => navigation.navigate('Camera')} style={styles.imageContainer}>
-            {
-              image
-                ? <View style={styles.imageBox}>
-                  <Image source={{ uri: image.uri }} style={styles.image} />
+          
+          {
+          image
+            ? <TouchableOpacity onPress={() => this.resetImageState()}>
+                <View style={styles.imageBox}>
+                  <Image source={{ uri: image }} style={styles.image} />
                 </View>
-                : <View style={styles.imageBox}>
+              </TouchableOpacity>
+            : <View>
+              <TouchableOpacity onPress={() => navigation.navigate('Camera')} style={styles.imageContainer}>
+                <View style={styles.takePictureBox}>
                   <Image source={require('../../assets/icons/camera.png')} style={{ width: 64, height: 64 }} />
                   <Text>Take a picture</Text>
                 </View>
-            }
-          </TouchableOpacity>
+              </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => this.browseImages()} style={styles.imageContainer}>
-            {
-              image
-                ? <View style={styles.imageBox}>
-                  <Image source={{ uri: image.uri }} style={styles.image} />
-                </View>
-                : <View style={styles.imageBox}>
+              <TouchableOpacity onPress={() => this.browseImages()} style={styles.imageContainer}>
+              <View style={styles.browseBox}>
+                  <Image source={require('../../assets/icons/folder.png')} style={{ width: 64, height: 64 }} />
                   <Text>Browse</Text>
                 </View>
-            }
-          </TouchableOpacity>
-          
+              </TouchableOpacity>
+            </View>
+          }
+
 
           <View style={styles.informationBox}>
             <View style={styles.nameAndScore}>
@@ -190,6 +194,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#ddd',
     overflow: 'hidden',
     borderRadius: 6,
+  },
+  takePictureBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 150,
+    width: '100%',
+    backgroundColor: '#ddd',
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
+  },
+  browseBox: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: 150,
+    width: '100%',
+    backgroundColor: '#ddd',
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
   },
   image: {
     height: 300,

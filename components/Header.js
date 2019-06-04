@@ -10,13 +10,13 @@ export default class PublicScreen extends React.Component {
         <TouchableOpacity
           style={styles.linkButton}
           onPress={() => this.props.navigate('Home')}>
-          <Text style={home ? styles.linkTextBold : styles.linkText}>YOUR RECIPES</Text>
+          <Text style={home ? styles.linkTextBold : styles.linkText}>YOUR NOODLES</Text>
         </TouchableOpacity>
         <View style={styles.divider}></View>
         <TouchableOpacity
           style={styles.linkButton}
           onPress={() => this.props.navigate('Public')}>
-          <Text style={home ? styles.linkText : styles.linkTextBold}>THEIR RECIPES</Text>
+          <Text style={home ? styles.linkText : styles.linkTextBold}>THEIR NOODLES</Text>
         </TouchableOpacity>
       </View>
     )
@@ -25,12 +25,11 @@ export default class PublicScreen extends React.Component {
 
 const styles = StyleSheet.create({
   header: {
-    height: 140,
+    height: 100,
     backgroundColor: '#ED9D19',
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    paddingTop: 20
   },
   linkButton: {
     height: 100,

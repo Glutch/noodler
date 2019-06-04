@@ -1,5 +1,4 @@
 import React from 'react'
-import { Font } from 'expo'
 import HomeScreen from './components/Screens/HomeScreen'
 import CreateScreen from './components/Screens/CreateScreen'
 import RecipeScreen from './components/Screens/RecipeScreen'

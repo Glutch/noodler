@@ -1,5 +1,5 @@
 import React from 'react'
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native'
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar } from 'react-native'
 
 import db from '../db'
 
@@ -8,7 +8,6 @@ import Header from '../Header'
 
 export default class PublicScreen extends React.Component {
   static navigationOptions = {
-    title: 'Their Recipes',
     header: null,
   }
 
@@ -28,6 +27,7 @@ export default class PublicScreen extends React.Component {
     const { recipes } = this.state
     return (
       <View style={styles.container}>
+        <StatusBar hidden={true} />
         <ScrollView style={styles.scrollView}>
           <Header navigate={this.navigate} screen={'home'}/>
           <View style={styles.recipes}>
@@ -53,47 +53,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1
   },
-  header: {
-    height: 140,
-    backgroundColor: '#ED9D19',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    paddingTop: 20
-  },
-  linkButton: {
-    height: 100,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '40%',
-  },
-  linkText: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    fontFamily: 'Roboto',
-    color: '#fff'
-  },
-  divider: {
-    height: 32,
-    width: 1,
-    backgroundColor: '#fff'
-  },
-  info: {
-    backgroundColor: '#f9f9f9',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-    flexDirection: 'row',
-  },
-  infoThing: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 100
-  },
-  big: {
-    fontSize: 30,
-  },
-  small: { fontSize: 12 },
   recipes: {
     flex: 1,
     padding: 25
