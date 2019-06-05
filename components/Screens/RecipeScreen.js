@@ -1,21 +1,9 @@
 import React from 'react'
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Image } from 'react-native'
-import { MediaLibrary, Permissions } from 'expo'
+import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Image, Alert } from 'react-native'
+import { MediaLibrary, Permissions, KeepAwake } from 'expo'
 import { Platform } from 'react-native'
 
 import db from '../db'
-
-const MakePublicBtn = ({ isPublic, updatePublicStatus }) => {
-  return <TouchableOpacity style={styles.makePublic} onPress={() => updatePublicStatus()}>
-          <Text style={styles.makePublicText}>{isPublic ? 'Unpublish' : 'Make Public'}</Text>
-        </TouchableOpacity>
-}
-
-const SaveRecipeBtn = ({ saveRecipeToLocalDb }) => {
-  return <TouchableOpacity style={styles.makePublic} onPress={() => saveRecipeToLocalDb()}>
-          <Text style={styles.makePublicText}>Save Recipe</Text>
-        </TouchableOpacity>
-}
 
 const Star = ({ filled }) => {
   return filled
@@ -67,7 +55,6 @@ export default class RecipeScreen extends React.Component {
       ? fetch(`http://92.35.43.129:4000/recipe/get?_id=${_id}`)
           .then(res => res.json())
           .then(res => {
-            console.log(res)
             this.setState({ ...res.recipe })
           })
       : db.findOne({ _id }, (err, recipe) => {
@@ -75,8 +62,21 @@ export default class RecipeScreen extends React.Component {
         })
   }
 
-  saveRecipeToLocalDb = () => {
-    
+  savePublicRecipeToLocalDb = () => {
+    const { _id, name, text, score, image } = this.state
+    const recipe = {
+      _id,
+      name,
+      text,
+      score,
+      image,
+      date: new Date(),
+    }
+
+    db.insert(recipe, (err, res) => {
+      this.props.navigation.push('Home')
+      console.log(res)
+    })
   }
 
   uploadRecipe = () => {
@@ -115,22 +115,21 @@ export default class RecipeScreen extends React.Component {
         this.updatePublicStatusLocally(true)
         console.log('success')
       })
-      
-  }
-
-  isEmpty = obj => {
-    for(var key in obj) {
-        if(obj.hasOwnProperty(key))
-            return false
-    }
-    return true
   }
 
   // deletes the current recipe from our local database
   delete = () => {
-    // db.remove({ _id: this.state._id })
-    // this.props.navigation.push('Home')
-    this.removeRecipeFromServer()
+    const { _id, name, isPublic } = this.state
+    const removeMessage = isPublic ? 'This also removes the recipe from the public list.' : ''
+    Alert.alert(`Delete ${name}?`, removeMessage, [
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+        { text: 'Delete', onPress: () => {
+            db.remove({ _id })
+            this.removeRecipeFromServer()
+            this.props.navigation.push('Home')
+        }},
+      ]
+    )
   }
 
   removeRecipeFromServer = async() => {
@@ -139,16 +138,6 @@ export default class RecipeScreen extends React.Component {
     let json = await res.json()
     this.updatePublicStatusLocally(false)
     console.log(json)
-  }
-
-  //Checks is this recipe is already uploaded to the server or not
-  isRecipeOnServer = async() => {
-    const { _id } = this.state
-    let res = await fetch(`http://92.35.43.129:4000/recipe?_id=${_id}`)
-    let json = await res.json()
-    const onServer = !this.isEmpty(json.recipe)
-    console.log('onServer', onServer)
-    return onServer
   }
 
   // Updates our local recipe publicity status
@@ -161,23 +150,37 @@ export default class RecipeScreen extends React.Component {
   }
 
   updatePublicStatus = () => {
-    const { isPublic } = this.state
-    isPublic
-      ? this.removeRecipeFromServer()
-      : this.uploadRecipe()
+    const { isPublic, name } = this.state
+    if (isPublic) {
+      Alert.alert(`Remove`, `Remove ${name} from the public list?`, [
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+        { text: 'Remove', onPress: () => this.removeRecipeFromServer() }
+      ])
+    } else {
+      Alert.alert(`Publish`, `Publish ${name} to the public list?`, [
+        { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel' },
+        { text: 'Publish', onPress: () => this.uploadRecipe() }
+      ])
+    }
   }
 
   render() {
     const { _id, name, text, score, image, isPublic } = this.state
     const toplist = this.props.navigation.getParam('toplist', false)
+    const saveBtnMessage = toplist
+      ? 'Save Recipe'
+      : isPublic
+        ? 'Unpublish'
+        : 'Make Public'
+
     if (!_id) {
       return <Skeleton />
     } 
     return (
       <ScrollView style={styles.scrollBox}>
-
+        <KeepAwake />
         <TouchableOpacity style={styles.makePublic} onPress={() => this.updatePublicStatus()}>
-          <Text style={styles.makePublicText}>{isPublic ? 'Unpublish' : 'Make Public'}</Text>
+          <Text style={styles.makePublicText}>{saveBtnMessage}</Text>
         </TouchableOpacity>
 
         {image && <View style={styles.imageBox}><Image source={{ uri: toplist ? `http://92.35.43.129:4000/images/${image}` : image }} style={styles.image}></Image></View>}
