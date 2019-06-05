@@ -11,11 +11,11 @@ export default class CreateRecipeScreen extends React.Component {
 
   state = {
     name: '',
-    text: `1 tbsp Banana
-3 tbsp Cake
+    text: `1 tbsp soy sauce
+3 tbsp happy noodle
 
-1. Mix it up
-2. Pour into bowl
+1. Cook noodle
+2. Eat noodle
 3. Enjoy!`,
     score: 0,
     image: null,

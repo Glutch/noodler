@@ -16,7 +16,7 @@ export default class HomeScreen extends React.Component {
   }
 
   fetchToplist = () => {
-    fetch('http://92.35.43.129:4000/toplist')
+    fetch('http://92.35.43.129:4000/recipe/top')
       .then(res => res.json())
       .then(res => {
         this.setState({ recipes: res.recipes })

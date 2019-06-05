@@ -2,7 +2,6 @@ import React from 'react'
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Image } from 'react-native'
 import { MediaLibrary, Permissions } from 'expo'
 import { Platform } from 'react-native'
-import axios from 'axios'
 
 import db from '../db'
 
@@ -65,7 +64,7 @@ export default class RecipeScreen extends React.Component {
     const toplist = this.props.navigation.getParam('toplist', false)
 
     toplist
-      ? fetch(`http://92.35.43.129:4000/recipe?_id=${_id}`)
+      ? fetch(`http://92.35.43.129:4000/recipe/get?_id=${_id}`)
           .then(res => res.json())
           .then(res => {
             console.log(res)
@@ -108,12 +107,11 @@ export default class RecipeScreen extends React.Component {
       }
     }
 
-    fetch('http://92.35.43.129:4000/upload/recipe', options)
+    fetch('http://92.35.43.129:4000/recipe/upload', options)
       .then(res => res.json())
       .then(res => res)
       .catch(err => err)
       .then(res => {
-        this.setState({ isPublic: true })
         this.updatePublicStatusLocally(true)
         console.log('success')
       })
@@ -130,9 +128,17 @@ export default class RecipeScreen extends React.Component {
 
   // deletes the current recipe from our local database
   delete = () => {
-    db.remove({ _id: this.state._id })
-    this.props.navigation.push('Home')
-    // ADD SERVER RECIPE REMOVE
+    // db.remove({ _id: this.state._id })
+    // this.props.navigation.push('Home')
+    this.removeRecipeFromServer()
+  }
+
+  removeRecipeFromServer = async() => {
+    const { _id } = this.state
+    let res = await fetch(`http://92.35.43.129:4000/recipe/delete?_id=${_id}`)
+    let json = await res.json()
+    this.updatePublicStatusLocally(false)
+    console.log(json)
   }
 
   //Checks is this recipe is already uploaded to the server or not
@@ -149,28 +155,16 @@ export default class RecipeScreen extends React.Component {
   updatePublicStatusLocally = isPublic => {
     const { _id } = this.state
     db.update({ _id }, { $set: { isPublic } }, {}, (err, numReplaced) => {
-      console.log('updated publicity locally')
+      this.setState({ isPublic })
+      console.log('updated publicity locally to', isPublic)
     })
   }
 
   updatePublicStatus = () => {
-    const { _id, isPublic, image } = this.state
-    this.isRecipeOnServer()
-      .then(onServer => {
-        if (onServer) {
-          console.log('recipe is on server, lets update')
-          fetch(`http://92.35.43.129:4000/updatePublicStatus?_id=${_id}&makePublic=${!isPublic}`)
-            .then(res => res.json())
-            .then(res => {
-              console.log(res)
-              this.setState({ isPublic: res.isPublic })
-              this.updatePublicStatusLocally(isPublic)
-            })
-        } else {
-          console.log('recipe is NOT on server, lets upload')
-          this.uploadRecipe()
-        }
-      })
+    const { isPublic } = this.state
+    isPublic
+      ? this.removeRecipeFromServer()
+      : this.uploadRecipe()
   }
 
   render() {
