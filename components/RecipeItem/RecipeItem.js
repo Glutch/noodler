@@ -12,15 +12,16 @@ export default class RecipeItem extends React.Component {
   render() {
     const { recipe, toplist } = this.props
     const { _id, name, image, score } = recipe
+    const imageSrc = image && image.length > 45 ? image : `http://92.35.43.129:4000/images/${image}`
     return (
       <TouchableOpacity
         style={styles.recipe}
         onPress={() => {
-          this.props.navigate('Recipe', { _id, name, toplist, image })
+          this.props.navigate('Recipe', { _id, toplist })
         }}>
           {
             image
-              ? <View style={styles.imageBox}><Image source={{ uri: toplist ? `http://92.35.43.129:4000/images/${image}` : image }} style={styles.image}></Image></View>
+              ? <View style={styles.imageBox}><Image source={{ uri: imageSrc }} style={styles.image}></Image></View>
               : <View style={styles.noImage}></View>
           }
       </TouchableOpacity>

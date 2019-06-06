@@ -45,27 +45,30 @@ export default class RecipeScreen extends React.Component {
     isPublic: false,
   }
 
+  navigate = (to, obj) => this.props.navigation.push(to, obj)
+
   async componentDidMount() {
     const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL)
 
-    const _id = this.props.navigation.getParam('_id', 'unnamed')
+    const _id = this.props.navigation.getParam('_id', undefined)
     const toplist = this.props.navigation.getParam('toplist', false)
 
     toplist
       ? fetch(`http://92.35.43.129:4000/recipe/get?_id=${_id}`)
           .then(res => res.json())
           .then(res => {
-            this.setState({ ...res.recipe })
+            this.setState({ ...res.recipe, toplist })
           })
       : db.findOne({ _id }, (err, recipe) => {
-          this.setState({ ...recipe })
+          this.setState({ ...recipe, toplist })
         })
   }
 
   savePublicRecipeToLocalDb = () => {
-    const { _id, name, text, score, image } = this.state
+    const { name, text, score, image } = this.state
+
     const recipe = {
-      _id,
+      type: 'recipe',
       name,
       text,
       score,
@@ -73,10 +76,16 @@ export default class RecipeScreen extends React.Component {
       date: new Date(),
     }
 
-    db.insert(recipe, (err, res) => {
-      this.props.navigation.push('Home')
-      console.log(res)
-    })
+    Alert.alert(`Save ${name}?`, '', [
+      { text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
+      { text: 'Save', onPress: () => {
+        db.insert(recipe, (err, res) => {
+          this.props.navigation.push('Home')
+          console.log('recipe saved')
+        })
+      }},
+    ]
+  )
   }
 
   uploadRecipe = () => {
@@ -164,26 +173,40 @@ export default class RecipeScreen extends React.Component {
     }
   }
 
-  render() {
-    const { _id, name, text, score, image, isPublic } = this.state
-    const toplist = this.props.navigation.getParam('toplist', false)
-    const saveBtnMessage = toplist
-      ? 'Save Recipe'
-      : isPublic
-        ? 'Unpublish'
-        : 'Make Public'
+  saveBtnMessage = () => this.state.toplist
+    ? 'Save Recipe'
+    : this.state.isPublic
+      ? 'Unpublish'
+      : 'Make Public'
 
-    if (!_id) {
-      return <Skeleton />
-    } 
+  editRecipe = () => this.navigate('Create', { _id: this.state._id, edit: true })
+
+  editBtn = () => {
+    const { _id, isPublic, toplist } = this.state
+    return (
+      toplist
+        ? <View></View>
+        : <TouchableOpacity style={styles.editBtn} onPress={() => this.editRecipe()}>
+        <Text style={styles.makePublicText}>Edit</Text>
+      </TouchableOpacity>
+    )
+  }
+
+  render() {
+    const { _id, name, text, score, image, isPublic, toplist } = this.state
+    const imageSrc = image && image.length > 45 ? image : `http://92.35.43.129:4000/images/${image}`
+    if (!_id) { return <Skeleton /> } // no _id = no recipe loaded yet. show skeleton template
     return (
       <ScrollView style={styles.scrollBox}>
         <KeepAwake />
-        <TouchableOpacity style={styles.makePublic} onPress={() => this.updatePublicStatus()}>
-          <Text style={styles.makePublicText}>{saveBtnMessage}</Text>
+
+        {this.editBtn()}
+
+        <TouchableOpacity style={styles.makePublic} onPress={() => toplist ? this.savePublicRecipeToLocalDb() : this.updatePublicStatus()}>
+          <Text style={styles.makePublicText}>{this.saveBtnMessage()}</Text>
         </TouchableOpacity>
 
-        {image && <View style={styles.imageBox}><Image source={{ uri: toplist ? `http://92.35.43.129:4000/images/${image}` : image }} style={styles.image}></Image></View>}
+        {image && <View style={styles.imageBox}><Image source={{ uri: imageSrc }} style={styles.image}></Image></View>}
 
         <View style={styles.informationBox}>
           <Text style={styles.name}>{name}</Text>
@@ -229,6 +252,20 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     elevation: 10,
     minWidth: 100
+  },
+  editBtn: {
+    position: 'absolute',
+    zIndex: 2,
+    top: 20,
+    left: 20,
+    backgroundColor: '#fff',
+    paddingTop: 10,
+    paddingBottom: 10,
+    paddingLeft: 20,
+    paddingRight: 20,
+    borderRadius: 50,
+    elevation: 10,
+    minWidth: 40
   },
   makePublicText: {
     fontSize: 12,

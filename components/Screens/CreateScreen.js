@@ -22,6 +22,21 @@ export default class CreateRecipeScreen extends React.Component {
   }
 
   componentDidMount() {
+    const edit = this.props.navigation.getParam('edit', false)
+    edit
+      ? this.editMode()
+      : this.normalMode()
+  }
+
+  editMode = () => {
+    const _id = this.props.navigation.getParam('_id', undefined)
+    db.findOne({ _id }, (err, recipe) => {
+      this.setState({ ...recipe, edit: true })
+      console.log(recipe)
+    })
+  }
+
+  normalMode = () => {
     this.setState({
       name: this.generateName(),
       score: Math.floor(Math.random() * 5 | 0)
@@ -40,7 +55,7 @@ export default class CreateRecipeScreen extends React.Component {
   updateImage = () => {
     // checks if navigation.param.image is updated, if so - update state
     const image = this.props.navigation.getParam('image', null) // get imageObject from navigation props (if there is one)
-    image != this.state.image && this.setState({ image })
+    image && image != this.state.image && this.setState({ image })
   }
 
   browseImages = async() => {
@@ -60,6 +75,13 @@ export default class CreateRecipeScreen extends React.Component {
     return `${pre[Math.floor(Math.random() * pre.length | 0)]} ${middle[Math.floor(Math.random() * middle.length | 0)]} ${names[Math.floor(Math.random() * names.length | 0)]}`
   }
 
+  save = () => {
+    const { edit } = this.state
+    edit
+      ? this.saveEdit()
+      : this.saveRecipe()
+  }
+
   saveRecipe = () => {
     const { name, text, score, image } = this.state
     const recipe = {
@@ -67,7 +89,7 @@ export default class CreateRecipeScreen extends React.Component {
       name,
       text,
       score,
-      image: image,
+      image,
       isPublic: false,
       date: new Date(),
     }
@@ -76,14 +98,20 @@ export default class CreateRecipeScreen extends React.Component {
       this.props.navigation.push('Home')
       console.log(res)
     })
+  }
 
-    // this.uploadRecipe(recipe)
+  saveEdit = () => {
+    const { _id, name, text, score, image } = this.state
+    db.update({ _id }, { $set: { name, text, score, image } }, {}, () => {
+      console.log('recipe updated')
+      this.props.navigation.push('Recipe', { _id })
+    })
   }
 
   render() {
     const { navigation } = this.props
     const { name, score, text, image } = this.state
-    console.log(image)
+    console.log('image', image)
     return (
       <KeyboardAvoidingView style={styles.container} keyboardVerticalOffset={65} behavior='padding' enabled>
         <ScrollView style={styles.scrollBox}>
@@ -147,7 +175,7 @@ export default class CreateRecipeScreen extends React.Component {
 
           <TouchableOpacity
             style={styles.addRecipeBtn}
-            onPress={() => this.saveRecipe()}
+            onPress={() => this.save()}
           >
             <Text style={styles.addRecipeBtnText}>Save {name}!</Text>
           </TouchableOpacity>
