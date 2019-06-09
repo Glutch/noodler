@@ -1,27 +1,28 @@
 import React from 'react'
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, StatusBar } from 'react-native'
 
-import db from '../db'
+import db from '../../db'
 
 import RecipeItem from '../RecipeItem/RecipeItem'
-import Header from '../Header'
+import Header from '../Header/Header'
 
 export default class PublicScreen extends React.Component {
   static navigationOptions = {
-    header: null,
+    header: null, //hides the default header, i have my own <Header>
   }
 
   state = {
-    recipes: [],
+    recipes: [], //object to be filled with recipes from local db
   }
 
   componentDidMount() {
+    //fetches recipe from local db and updates state
     db.find({ type: 'recipe' }).sort({ date: -1 }).exec((err, res) => {
       this.setState({ recipes: res })
     })
   }
 
-  navigate = (to, obj) => this.props.navigation.push(to, obj)
+  navigate = (to, obj) => this.props.navigation.push(to, obj) //cleaner navigation function
 
   render() {
     const { recipes } = this.state

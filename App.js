@@ -6,6 +6,10 @@ import CameraScreen from './components/Screens/CameraScreen'
 import PublicScreen from './components/Screens/PublicScreen'
 import { createStackNavigator, createAppContainer } from 'react-navigation'
 
+// createStackNavigator creates the "root" object we use with react-navigation
+// we define the name we will use to transition betweens creens
+// the "navigation" function gets passed down to all child components defined here automatically
+// for example to go to Home we use this.props.navigation.push('Home')
 const AppNavigator = createStackNavigator({
     Home: HomeScreen,
     Create: CreateScreen,
@@ -14,20 +18,7 @@ const AppNavigator = createStackNavigator({
     Public: PublicScreen,
   },
   {
-    initialRouteName: 'Home',
-    navigationOptions: {
-      headerStyle: {
-        backgroundColor: '#F8A927',
-        shadowOpacity: 0,
-        elevation: 0,
-        height: 80,
-      },
-      headerTintColor: '#000',
-      headerTitleStyle: {
-        fontWeight: 'bold',
-        width: '100%'
-      },
-    },
+    initialRouteName: 'Home', //screen to show on launch
   }
 )
 

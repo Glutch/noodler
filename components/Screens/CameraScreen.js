@@ -24,6 +24,7 @@ export default class CameraScreen extends React.Component {
   }
 
   calculateOffset = () => {
+    // tries to maintain a nice aspect ratio so the image wont be warped (doesnt work perfectly. but image still turns out as it should so its fine atm)
     const { height, width } = Dimensions.get('window')
     const newWidth = height * (3 / 4)
     const widthOffset = -((newWidth - width) / 2)
@@ -31,16 +32,19 @@ export default class CameraScreen extends React.Component {
   }
 
   getCameraPermission = async () => {
+    // asks the user for permission to use the camera
     const { status } = await Permissions.askAsync(Permissions.CAMERA)
     this.setState({ hasCameraPermission: status === 'granted' })
   }
 
   getCameraRollPermission = async () => {
+    // asks the user for permission to access the file system / images
     const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL)
     this.setState({ hasCameraRollPermission: status === 'granted' })
   }
 
   takePicture = async () => {
+    //takes a picture and sends the user back to the create screen with the image url
     if (this.camera) {
       const { uri } = await this.camera.takePictureAsync()
       const asset = await MediaLibrary.createAssetAsync(uri)
@@ -50,13 +54,13 @@ export default class CameraScreen extends React.Component {
 
   prepareRatio = async () => {
     if (Platform.OS === 'android' && this.camera) {
-      const ratios = await this.camera.getSupportedRatiosAsync();
+      const ratios = await this.camera.getSupportedRatiosAsync()
 
       // See if the current device has your desired ratio, otherwise get the maximum supported one
       // Usually the last element of "ratios" is the maximum supported ratio
-      const ratio = ratios.find((ratio) => ratio === DESIRED_RATIO) || ratios[ratios.length - 1];
+      const ratio = ratios.find((ratio) => ratio === DESIRED_RATIO) || ratios[ratios.length - 1]
 
-      this.setState({ ratio });
+      this.setState({ ratio })
     }
   }
 

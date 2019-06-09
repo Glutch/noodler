@@ -1,10 +1,12 @@
 import React from 'react'
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native'
 
+
+//global header used in relevant screens instead of the default header
 export default class PublicScreen extends React.Component {
   render() {
     const currentScreen = this.props.screen
-    const home = currentScreen == 'home'
+    const home = currentScreen == 'home' //this is used to hightlight the text depending on where you are
     return (
       <View style={styles.header}>
         <TouchableOpacity

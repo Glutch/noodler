@@ -1,22 +1,22 @@
 import React from 'react'
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from 'react-native'
 
-import db from '../db'
+import config from '../../config'
 
 import RecipeItem from '../RecipeItem/RecipeItem'
-import Header from '../Header'
+import Header from '../Header/Header'
 
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
-    header: null,
+    header: null, //hides the default header, i have my own <Header>
   }
 
   state = {
-    recipes: [],
+    recipes: [], //object that will be filled with recipes from the server
   }
 
   fetchToplist = () => {
-    fetch('http://92.35.43.129:4000/recipe/top')
+    fetch(`${config.devIp}/recipe/top`)
       .then(res => res.json())
       .then(res => {
         this.setState({ recipes: res.recipes })
@@ -27,10 +27,11 @@ export default class HomeScreen extends React.Component {
   }
 
   componentDidMount() {
+    // as soon as the component mounts, we fetch recipes from our server
     this.fetchToplist()
   }
 
-  navigate = (to, obj) => this.props.navigation.push(to, obj)
+  navigate = (to, obj) => this.props.navigation.push(to, obj) //makes the navigation cleaner
 
   render() {
     const { recipes } = this.state

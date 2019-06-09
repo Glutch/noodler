@@ -1,15 +1,14 @@
 import React from 'react'
-import { Platform } from 'react-native'
 import { ImagePicker } from 'expo'
 import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, KeyboardAvoidingView, Image } from 'react-native'
-import db from '../db'
+import db from '../../db'
 
 export default class CreateRecipeScreen extends React.Component {
   static navigationOptions = {
-    header: null,
+    header: null, //hides the default header, i have my own <Header>
   }
 
-  state = {
+  state = { //default recipe configuration
     name: '',
     text: `1 tbsp soy sauce
 3 tbsp happy noodle
@@ -22,6 +21,7 @@ export default class CreateRecipeScreen extends React.Component {
   }
 
   componentDidMount() {
+    // checks if the user came here from the edit btn
     const edit = this.props.navigation.getParam('edit', false)
     edit
       ? this.editMode()
@@ -29,17 +29,17 @@ export default class CreateRecipeScreen extends React.Component {
   }
 
   editMode = () => {
+    // if the user came here to edit, we fill the inputs with the recipes information
     const _id = this.props.navigation.getParam('_id', undefined)
-    db.findOne({ _id }, (err, recipe) => {
+    db.findOne({ _id }, (err, recipe) => { //fetch recipe from local db and update state
       this.setState({ ...recipe, edit: true })
-      console.log(recipe)
     })
   }
 
   normalMode = () => {
+    // normal mode: generates a funny recipe name
     this.setState({
-      name: this.generateName(),
-      score: Math.floor(Math.random() * 5 | 0)
+      name: this.generateName()
     })
   }
 
@@ -48,6 +48,7 @@ export default class CreateRecipeScreen extends React.Component {
   }
 
   resetImageState = () => {
+    // if user wants to take / browse a new picture
     this.props.navigation.setParams({ image: null })
     this.setState({ image: null })
   }
@@ -55,19 +56,20 @@ export default class CreateRecipeScreen extends React.Component {
   updateImage = () => {
     // checks if navigation.param.image is updated, if so - update state
     const image = this.props.navigation.getParam('image', null) // get imageObject from navigation props (if there is one)
-    image && image != this.state.image && this.setState({ image })
+    image && image != this.state.image && this.setState({ image }) // if image url is there and is different from state, use new image url
   }
 
   browseImages = async() => {
+    // launches expo's image picker and looks for only images (not videos etc)
     const image = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'Images' })
     const { cancelled, uri } = image
     if (!cancelled) { // checks if the user actually selected an image
-      this.props.navigation.setParams({ image: uri }) // updates navigation param image to new uri
+      this.props.navigation.setParams({ image: uri }) // updates navigation param image to new url (and componentDidUpdate, updateImage handles the change)
     }
   }
 
   generateName = () => {
-    // randomly generate an amusing recipe title
+    // randomly generates an amusing recipe title
     const pre = ['Pretty', 'Very', 'Kinda', 'Relatively', 'Boring', 'Tasty']
     const middle = ['Blue', 'Green', 'Lovely', 'Amazing', 'Normal', 'Unusual', 'Funky', 'Smelly']
     const names = ['Soup', 'Cake', 'Curry', 'Potato', 'Brownie', 'Bread', 'Pancake']
@@ -83,6 +85,7 @@ export default class CreateRecipeScreen extends React.Component {
   }
 
   saveRecipe = () => {
+    // if createscreen is in normal mode, save the recipe to our local db
     const { name, text, score, image } = this.state
     const recipe = {
       type: 'recipe',
@@ -101,19 +104,20 @@ export default class CreateRecipeScreen extends React.Component {
   }
 
   saveEdit = () => {
+    // if createscreen is in edit mode, update the recipe with new data
     const { _id, name, text, score, image } = this.state
     db.update({ _id }, { $set: { name, text, score, image } }, {}, () => {
       console.log('recipe updated')
-      this.props.navigation.push('Recipe', { _id })
+      this.props.navigation.push('Home')
     })
   }
 
   render() {
     const { navigation } = this.props
-    const { name, score, text, image } = this.state
-    console.log('image', image)
+    const { name, text, image } = this.state
     return (
-      <KeyboardAvoidingView style={styles.container} keyboardVerticalOffset={65} behavior='padding' enabled>
+      <KeyboardAvoidingView style={styles.container} keyboardVerticalOffset={-20} behavior='padding' enabled>
+        {/* KeyboardAvoidingView makes the text come into better view when keyboard is showing */}
         <ScrollView style={styles.scrollBox}>
           
           {

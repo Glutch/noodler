@@ -1,18 +1,13 @@
 import React from 'react'
-import { StyleSheet, Text, View, TextInput, ScrollView, TouchableOpacity, Image } from 'react-native'
-import { LinearGradient } from 'expo'
+import { StyleSheet, View, TouchableOpacity, Image, Text } from 'react-native'
 
-const Star = props => {
-  return props.filled
-    ? <Image source={require(`../../assets/icons/star.png`)} style={{ width: 20, height: 20, marginRight: 5 }} />
-    : <Image source={require(`../../assets/icons/star_gray.png`)} style={{ width: 20, height: 20, marginRight: 5 }} />
-}
+import config from '../../config'
 
 export default class RecipeItem extends React.Component {
   render() {
     const { recipe, toplist } = this.props
     const { _id, name, image, score } = recipe
-    const imageSrc = image && image.length > 45 ? image : `http://92.35.43.129:4000/images/${image}`
+    const imageSrc = image && image.length > 45 ? image : `${config.devIp}/images/${image}`
     return (
       <TouchableOpacity
         style={styles.recipe}
@@ -22,7 +17,7 @@ export default class RecipeItem extends React.Component {
           {
             image
               ? <View style={styles.imageBox}><Image source={{ uri: imageSrc }} style={styles.image}></Image></View>
-              : <View style={styles.noImage}></View>
+              : <View style={styles.noImage}><Text>No image</Text></View>
           }
       </TouchableOpacity>
     )
@@ -74,5 +69,8 @@ const styles = StyleSheet.create({
     height: 200,
     width: '100%',
     borderRadius: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    display: 'flex'
   },
 })
